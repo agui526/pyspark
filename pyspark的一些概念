@@ -1,0 +1,60 @@
+
+一个spark环境可以运行多个application
+一份代码跑起来就是一个 application, 一个 Action 算子会产生一个 job( 一个app的子任务 )， 每一个 job 有自己的 DAG
+
+
+DAG 的宽窄依赖和阶段的划分
+rdd前后关系分为
+    宽依赖： 父rdd的一个分区全部数据都发给子rdd的一个分区 （ 别名：shuffle ）
+    窄依赖： 父rdd的一个分区，将数据发给子rdd的多个分区
+
+从后向前，遇到 宽依赖 就划分一个阶段（stage）
+所以 stage 内部一定是窄依赖
+
+
+spark的并行：同一时间内有多少个 task 并行在跑
+spark 默认受到全局并行度的限制，除了个别算子有特殊分区情况，大部分的算子都会遵循全局并行度的要求，来规划自己的分区数
+如果全局并行度是3，其实大部分的算子分区都是3
+spark 一般推荐只设置全局并行度，不要在算子上设置并行度，除了一些排序算子外，计算算子使用默认分区就可以
+
+并行度设置的优先级
+    1. 代码中
+    2. 客户端提交参数
+    3. 配置文件
+    4. 默认
+全局并行度配置参数： spark.default.parallelism
+
+下面的算子可以设置rdd的并行度
+    1. repartition
+    2. coalesce
+    3. partitionBy
+
+
+
+sparkSQL中的数据结构
+DataFrame： 二维表格的形式
+    可用于java scala python R
+DataSet：
+    可用于java scala（ 基于泛型，python中没有这个概念 ）
+
+DataFrame
+    在结构层面
+    - StructType 对象描述整个 DataFrame 的表结构，有几列，列的名字和类型，能否为空
+    - StructField 对象描述一个列的信息， 所以多个 StructField 组成一个 StructType
+    在数据层面
+    - Row 对象记录一行数据
+    - Column 对象记录一列数据并包含列的信息
+
+
+UDF: User Defined Function
+    一对一关系，输入一个值输出一个值
+UDAF: User Defined Aggregation Function
+    多对一关系，多个输入一个输出，通常与groupBy 联合使用
+UDTF: User Defined Table-Generating Function
+    一对多关系，输入一个值输出多个值( 一行变多行 )
+
+UDF, Java/Python/Scala 都支持
+UDAF, Java/Scala支持
+UDTF，SparkSQL不支持
+
+
